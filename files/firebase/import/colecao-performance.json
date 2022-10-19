@@ -1,0 +1,15 @@
+{
+
+  "chats": {
+    "one": {
+      "title": "Historical Tech Pioneers",
+      "lastMessage": "ghopper: Relay malfunction found. Cause: moth.",
+      "messages": {
+        "m1": { "sender": "ghopper", "message": "Relay malfunction found. Cause: moth." },
+        "m2": { ... },
+        
+      }
+    },
+    "two": { ... }
+  }
+}

@@ -1,0 +1,14 @@
+version: '3.7'
+services:
+  mongodb:
+    container_name: mongodb
+    image: mongo:latest
+    environment:
+      MONGO_INITDB_ROOT_USERNAME: dev
+      MONGO_INITDB_ROOT_PASSWORD: dev
+    ports:
+      - 27017:27017
+    volumes:
+      - /volume:/data/db
+      - ../import:/import:rw
+
