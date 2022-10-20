@@ -293,7 +293,7 @@ db.enderecos.findOne()
 
 db.enderecos.find({pessoa_id: matheusId})
 
-``` 
+```
 No exemplo acima trabalhos com duas **collections**, *pessoas* e *enderecos* e as conectamos atravéz do **id** ```pessoa_id: matheusId```
 
 #### One to Many
@@ -389,7 +389,129 @@ db.pessoas.find({_id: {$in: idsAlunos}})
 
 ### Query de arrays e Documents
 
-....
+#### Query em embedded documents
+
+Para resgatar um dado que está em um document em um outro document, vamos precisar de uma sintaxe diferente:
+
+```javaScript
+
+find({ “chave1.chave2”: “valor” })
+
+```
+
+é preciso colocar as duas chaves entre aspas e depois seguir com o valor, como é comum na busca por chaves;
+
+Vamos criar a seguinte collections;
+
+```javaScript
+
+use masterselect
+
+db.pessoas.insertMany([
+  {
+    nome: "Matheus",
+    caracteristicas: {
+      peso: "80kg",
+      altura: "1.80m",
+      cor_dos_olhos: "verdes",
+      idade: 30,
+    }
+  },
+  {
+    nome: "Pedro",
+    caracteristicas: {
+      peso: "92kg",
+      altura: "1.65m",
+      cor_dos_olhos: "castanhos",
+      idade: 25,
+    }
+  },
+  {
+    nome: "Maria",
+    caracteristicas: {
+      peso: "68kg",
+      altura: "1.92m",
+      cor_dos_olhos: "azuis",
+      idade: 33,
+    }
+  },
+  {
+    nome: "Carla",
+    caracteristicas: {
+      peso: "72kg",
+      altura: "1.72m",
+      cor_dos_olhos: "castanhos",
+      idade: 19,
+    }
+  },
+])
+
+db.pessoas.find()
+
+db.pessoas.find({"caracteristicas.cor_dos_olhos": "castanhos"}).pretty()
+
+```
+
+#### Query em embedded com operador
+
+A lógica para utilizar operadores é a mesma, colocar as chaves entre aspas;
+
+```javaScript
+
+find({ “chave1.chave2”: { $gt: 20 })
+
+```
+
+```javaScript
+db.pessoas.find()
+
+db.pessoas.find({"caracteristicas.idade": { $gt: 30 }}).pretty()
+
+```
+
+### LAB 3
+
+* Selecione pessoas por dois campos: peso e idade, que ficam em características;
+* Em peso utilize o operador $in;
+* Em idade utilize o operador $gt;
+
+#### Query em item específico de array
+
+Para encontrar item específico em array podemos utilizar o valor final;
+
+```javaScript
+
+db.alunos.find({ notas: 8 })
+
+```
+
+```javaScript
+db.alunos.insertMany([
+  {
+    nome: "Matheus",
+    matematica: [8, 7, 10, 8]
+  },
+  {
+    nome: "Pedro",
+    matematica: [8, 8, 9, 7]
+  },
+  {
+    nome: "Maria",
+    matematica: [6, 4, 10, 9]
+  },
+])
+```
+
+Neste exemplo todos os alunos com nota 8 serão retornados;
+
+Para valores exatos, precisamos colocar o array inteiro:
+
+```javaScript
+db.alunos.find({notas: [10, 8, 6, 5]})
+```
+
+Neste exemplo somente alunos que tiraram as quatro notas acima serão retornados;
+
 
 ### Índices
 
