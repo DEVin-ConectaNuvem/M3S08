@@ -1,4 +1,4 @@
-# MongoDb
+# MongoDB
 
 Para os exercícios práticos vamos utilizar o MongoDb via Docker, dispensando a necessidade de um serviço sempre em execução na sua máquina de desenvolvimento.
 
@@ -196,6 +196,8 @@ Estamos buscando um texto com o conteúdo ¨pizza¨, mas para o funcionamento co
 * Depois faça uma seleção dos mesmos com exists, baseado neste novo campo;
 
 ## Relacionamentos
+
+![Relacionamentos](../../docs/images/relacionamentos.png)
 
 ### O que são relacionamentos?
 
@@ -518,13 +520,351 @@ db.alunos.find({matematica: [10, 8, 6, 5]})
 
 Neste exemplo somente alunos que tiraram as quatro notas acima serão retornados;
 
-### Índices
+## Índices (indexes)
 
-....
+> Primeiramente realize o import da collections *files/mongo/import/city.json* dentro de um banco em sua instalação local.
 
-### Aggregation
+### Conceito
 
-....
+Índices são estruturas de dados especiais que armazenam uma pequena porção do conjunto de dados da collection de forma fácil de percorrer.
+
+O índice armazena o valor de um campo específico ou conjunto de campos, ordenados pelo valor do campo. A ordenação das entradas de índice suporta correspondências de igualdade eficientes e operações de consulta baseadas em intervalo. Além disso, o MongoDB pode retornar resultados classificados usando a ordenação no índice.
+
+[Fonte - Documentação Oficial](https://www.mongodb.com/docs/manual/indexes/)
+
+![Indíce](../../docs/images/index-mongo.svg)
+
+Podemos comparar um índice em banco noSQL à um índice em um livro. Já imaginou ter de procurar do começo ao fim de um livro por uma informação? Nesse caso usaríamos o seu índice, que nos indicaria a posição onde encontrar a informação de forma eficiente.
+
+A ideia é evitar um **[table scan](https://en.wikipedia.org/wiki/Full_table_scan)** toda vez que realizamos uma consulta, ou seja, não queremos que o MongoDB faça uma varredura completa dentro da coleção para encontrar os documentos procurados. Os dados com índices são checados primeiro na hora de uma seleção.
+
+
+> Importante o dado pertencente ao campo **_id** já vem com um índice criado por padrão
+
+### Plano de Execução (explain)
+
+Podemos ter informações do caminho que o MongoDB utilizou para realizar uma consulta com a função **explain**
+
+Exemplo:
+
+```javaScript
+
+db.city.find({certificate_number: 3030353}).explain()
+
+```
+
+Neste exemplo vamos entender o caminho percorrido pela ferramente para encontrar o certificado número 3030353.
+
+### Criação
+
+#### Criando um Índice
+
+Para criar um índice vamos utilizar o comando **createIndex**.
+
+```javaScript
+
+db.city.createIndex({ certificate_number: 1 })
+
+```
+
+Neste exemplo criamos um índice no dado **certificate_numer**. A partir de agora, todas as consultas que utilizem este campos serão mais rápidas.
+
+#### Criando um Índice em campos de embedded documents
+
+É possível criar índices para campo de **embedded documents**
+
+
+```javaScript
+
+db.city.createIndex({ "address.city": 1 })
+
+```
+Neste exemplo o campo *city* dentro do documento *address* agora tem um índice. Consequentemente as consultas que envolvem este campo, serão mais performáticas;
+
+#### Criando um Índice compostos
+
+É possivel criar nn MongoDB um índice para múltiplos campos.
+
+Exemplo
+
+```javaScript
+
+db.city.createIndex({ certificate_number: 1, date: 1 })
+
+```
+
+Isso favorece as buscas quando os dois são incluídos na consulta como por exemplo:
+
+```javaScript
+
+db.city.find({certificate_number: 3030353}).explain()
+
+```
+
+#### Criando um Índice de texto
+
+São índices que facilitam a busca de **texto** em um campo.
+
+Exemplo
+
+```javaScript
+
+db.city.createIndex({ business_name: "text" })
+
+```
+
+Isso favorece as buscas quando acionado o campo **business_name**.
+
+>Podemos ter apenas um índice de texto por collection
+
+
+Exemplo de buscas após a criação do indice
+
+```javaScript
+
+db.city.find({ $text: { $search: "HOT DOG" } })
+
+db.city.find({ $text: { $search: "HOT DOG" } }).explain()
+
+```
+
+
+### Busca
+
+#### Buscando Índices de Collections
+
+Podemos checar quais índices uma collection possui.
+
+```javaScript
+
+db.city.getIndexes()
+
+```
+
+Nesta busca todos os índices criados na collection *city* serão retornados;
+
+#### Buscando Índices de banco
+
+Podemos listar todos os índices criados de um banco. 
+
+Para tal vamos ter que fazer primeiramente um loop em todas as collections com um **forEach** e logo após percorrer cada item do loop usando o comando getIndexes.
+
+```javaScript
+db.getCollectionNames().forEach(function(collection) {
+   indexes = db[collection].getIndexes();
+   print("Índices de " + collection + ":");
+   printjson(indexes);
+});
+
+```
+
+#### Removendo Índices de campos específicos
+
+Para remover índices vamos utilizar a função **dropIndex**.
+
+```javaScript
+
+db.city.dropIndex({ certificate_number: 1 })
+
+```
+Neste exemplo teremos removido o indice criado no campo **certificate_number** e posterior a isso teremos uma queda na performance deste campo.
+
+#### Removendo todos os Índices de uma collection
+
+Podemos remover todos os índices de uma collection utilizando a função **dropIndexes**.
+
+```javaScript
+
+db.city.dropIndexes()
+
+```
+Neste exemplo teremos removido dos os indices criados na collection **city** com exceção do indice criado automáticamente pelo MongoDB no campo **_id** este nunca será excluido.
+
+
+## Aggregation
+
+> Primeiramente realize o import da collections *files/mongo/import/books.json* dentro de um banco em sua instalação local.
+
+### Conceito
+
+é um framework do MongoDB cujo o principal objetivo é **agregar** resultados se baseando muito no conceito de aggregate functions do SQL, para retornar valores que não obtidos somente em uma *collection*.
+
+### Pipeline
+
+**Pipeline** é um termo que está ligado ao aggregation, é o modo que construímos o resultado da nossas agragações.
+
+Uma pipeline de agregação consiste em um ou mais estágios que processam documentos:
+
+* Cada estágio realiza uma operação nos documentos de entrada. Por exemplo, um estágio pode filtrar documentos, agrupar documentos e calcular valores.
+
+* Os documentos que saem de um estágio são passados ​​para o próximo estágio.
+
+* Uma pipeline de agregação pode retornar resultados para grupos de documentos. Por exemplo, retorne os valores total, médio, máximo e mínimo.
+
+Documentação oficial [aqui](https://www.mongodb.com/docs/manual/meta/aggregation-quick-reference/)
+
+### $bucket
+
+Categoriza os documentos recebidos em grupos, chamados de *buckets*, com base em uma expressão especificada e nos limites de um **bucket**
+
+Podemos definir a classificação de um grupo baseado em um campo e receberemos uma contagem de dados neste grupo.
+
+Sintax [aqui](https://www.mongodb.com/docs/manual/reference/operator/aggregation/bucket/#mongodb-pipeline-pipe.-bucket)
+
+Exemplo:
+
+```javaScript
+db.books.aggregate([
+  {
+    $bucket: {
+      groupBy: "$pageCount",
+      boundaries: [100, 200, 300, 400, 500, 600, 700],
+      default: "OTHERS",
+      output: {
+        "count": {$sum: 1}
+      }
+    }
+  }
+])
+```
+
+### $collStatus
+
+O operador ```$collStatus``` tem como objetivo retornar dados de uma collection.
+
+As informações que podem ser retornadas podem ser: inforções de banco, collection, horário atual, contagem de registros, etc...
+
+Mas podemos resgatar dados mais avançados como: shards, quantidade de queries executadas.
+
+Sintax [aqui](https://www.mongodb.com/docs/manual/reference/operator/aggregation/collStats/#mongodb-pipeline-pipe.-collStats)
+
+
+Exemplo:
+
+```javaScript
+
+db.books.aggregate( [ { $collStats: { queryExecStats: { }, count: { } } } ] ).pretty()
+
+```
+
+### $sort
+
+Com o operador ```$sort``` podemos ordenar os resultados se baseando em algum campo (1 crescente, -1 decrescente), geralmente é usado para fazer filtros de ordenação.
+
+Sintax [aqui](https://www.mongodb.com/docs/manual/reference/operator/aggregation/sort/#mongodb-pipeline-pipe.-sort)
+
+Exemplo:
+
+```javaScript
+
+db.books.aggregate([
+  { $sort: { pageCount: -1 } }
+]).pretty()
+
+```
+
+### $limit
+
+Com o operador ```$limit``` podemos limitar o número de resultados retornados passamos um parâmetro com o número limite.
+
+Sintax [aqui](https://www.mongodb.com/docs/manual/reference/operator/aggregation/limit/#mongodb-pipeline-pipe.-limit)
+
+Exemplo:
+
+```javaScript
+
+db.books.aggregate([
+  { $sort: { pageCount: -1 } },
+  { $limit : 3 }
+]).pretty();
+
+
+```
+
+### $match
+
+Com o ```$match``` é possível determinar um filtro para os resultados.
+
+Sintax [aqui](https://www.mongodb.com/docs/manual/reference/operator/aggregation/match/#mongodb-pipeline-pipe.-match)
+
+Exemplo:
+
+```javaScript
+db.books.aggregate([
+  { $sort: { pageCount: -1 } },
+  { $match: { authors: "Robi Sen"}},
+  { $limit : 3 }
+]).pretty();
+
+```
+
+### $out
+
+O ```$out``` nos permite criar uma collection a partir da aggregation e os retornos da agregação serão inseridos em uma nova collection, tendo assim só os dados filtrados.
+
+Sintax [aqui](https://www.mongodb.com/docs/manual/reference/operator/aggregation/out/#mongodb-pipeline-pipe.-out)
+
+Exemplo:
+
+```javaScript
+
+db.books.aggregate([
+  { $match: { categories: "Java", pageCount: { $gt: 800 }}},
+  { $limit : 5 },
+  { $out: "bigjavabooks" }
+]).pretty();
+
+db.bigjavabooks.find().pretty()
+
+```
+
+### $sortByCount
+
+O ```$sortByCount``` oderna os resultados por um campo específco
+
+Sintax [aqui](https://www.mongodb.com/docs/manual/reference/operator/aggregation/sortByCount/#mongodb-pipeline-pipe.-sortByCount)
+
+Exemplo:
+
+```javaScript
+
+db.books.aggregate( [ { $unwind: "$categories" },  { $sortByCount: "$categories" } ] )
+
+```
+
+### $lookup
+
+> Primeiramente realize o import da collections *files/mongo/import/posts.json* e *files/mongo/import/comments.json* dentro de um banco em sua instalação local.
+
+Executa uma junção externa a uma coleção no mesmo banco de dados para filtrar documentos da collections "ingressada" para processamento. 
+
+O estágio $lookup adiciona um novo campo de matriz a cada documento de entrada. O novo campo de matriz contém os documentos correspondentes da coleção "ingressada". O estágio $lookup passa esses documentos reformulados para o próximo estágio.
+
+Documentação oficial [aqui](https://www.mongodb.com/docs/manual/reference/operator/aggregation/lookup/#mongodb-pipeline-pipe.-lookup)
+
+Exemplo:
+
+```javaScript
+
+use devinhouse
+
+db.posts.aggregate([
+    { $lookup:
+        {
+           from: "comments",
+           localField: "title",
+           foreignField: "postTitle",
+           as: "comments"
+        }
+    }
+])
+
+```
+
+* from: a collection à qual queremos nos juntar
+* localField: o campo pelo qual queremos nos unir na collection local (a coleção na qual estamos executando a consulta)
+* foreignField: o campo pelo qual queremos nos unir na collections estrangeira (a coleção com a qual queremos nos unir)
+* as: o nome da matriz de saída para os resultados
 
 ## Outros
 
