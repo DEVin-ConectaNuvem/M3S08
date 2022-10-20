@@ -475,6 +475,12 @@ db.pessoas.find({"caracteristicas.idade": { $gt: 30 }}).pretty()
 * Em peso utilize o operador $in;
 * Em idade utilize o operador $gt;
 
+#### Resposta 
+
+```javaScript
+db.pessoas.find({"caracteristicas.peso": {$in: ["80kg", "92kg"]}, "caracteristicas.idade": {$gt: 20}})
+```
+
 #### Query em item específico de array
 
 Para encontrar item específico em array podemos utilizar o valor final;
@@ -507,11 +513,10 @@ Neste exemplo todos os alunos com nota 8 serão retornados;
 Para valores exatos, precisamos colocar o array inteiro:
 
 ```javaScript
-db.alunos.find({notas: [10, 8, 6, 5]})
+db.alunos.find({matematica: [10, 8, 6, 5]})
 ```
 
 Neste exemplo somente alunos que tiraram as quatro notas acima serão retornados;
-
 
 ### Índices
 
