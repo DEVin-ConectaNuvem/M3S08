@@ -43,4 +43,4 @@ npm start
 
 ```
 
-A saida será um site estático disponível em [http://localhost:8080](http://localhost:8080)
+A saida será um site estático disponível em [http://localhost:8000](http://localhost:8000)
