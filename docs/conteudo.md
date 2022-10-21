@@ -87,3 +87,72 @@ O conteúdo prático será voltado para os bancos:
 * [MongoDB](../files/mongo/README.md);
 * [Firebase](../files/firebase/README.md);
 
+### Exercicios
+
+[M3S7] 1- Query - Importe a colection anexada e realise uma consulta simples trazendo todos os usuários que possuem email com dominio "gmail.com"
+
+   Mongo 
+
+     * db.exercicios.find({"email": {'$regex':'gmail'}})
+     * db.exercicios.find({"email": {'$regex':'gmail'}})
+
+   Firebase 
+
+    * usar o console
+
+
+[M3S7] 2 - Query - Importe a colection anexada e realise uma consulta simples trazendo todos os usuários que possuem idade acima de 10 anos
+
+   Mongo
+
+   	* db.exercicios.find({"age": {'$gt':"10"}})
+
+   Firebase 
+
+    * usar o console
+    
+
+[M3S7] 3 - Query - Importe a colection anexada e realise uma consulta simples trazendo todos os usuários que possuem "Henrique" em seu nome
+
+   Mongo
+
+     * db.exercicios.find({"name": {'$regex':'Henrique'}})
+     * db.exercicios.find({"name": {'$regex':'Henrique'}})
+
+   Firebase 
+
+    * usar o console
+
+[M3S7] 4 - Index - No serviço de Firestore DataBase. Crie uma coleção chamada livros com os seguintes campos
+
+		titulo : Clean Architecture
+		autor : Robert Cecil Martin
+
+		titulo: Domain-Driven Design
+		autor : Eric Evans
+
+		titulo: Working Effectively with Legacy Code
+		autor : Michael Feathers
+
+		Todos os campos serão do tipo String
+
+[M3S7] 5 - Index - No serviço de Firestore DataBase. Com a coleção criada no exercicio 4 crie um indice
+
+   Mongo
+
+	   db.exercicios.insertMany([
+		  {titulo: "Clean Architecture", autor:"Robert Cecil Martin"},
+		  {titulo: "Domain-Driven Design", autor:"Eric Evans"},
+		  {titulo: "Working Effectively with Legacy Code", autor:"Michael Feathers"}
+	   ])
+
+	   * db.exercicios.createIndex({ certificate_number: 1 })
+
+	 Firebase
+
+	  * No console
+
+	
+[M3S7] 6 - Performance - Importe a colection anexada analise e altere sua estrutura de dados para melhorar a performance da coleção.
+
+[Documentação Firebase](https://firebase.google.com/docs/database/web/structure-data)
